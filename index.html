@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campeonato Cerrillos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pitch:#0B4228; --pitch-dark:#082F1C; --line:#1F6E45;
+    --chalk:#F4F1E8; --ink:#12201A; --amber:#E8B33D; --amber-dark:#8A6114;
+    --crimson:#C1443D; --muted:#8FAE9C;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      repeating-linear-gradient(90deg, var(--pitch) 0px, var(--pitch) 60px, var(--line) 60px, var(--line) 61px),
+      var(--pitch);
+    color:var(--chalk); font-family:'Inter',sans-serif; min-height:100vh;
+  }
+  .wrap{max-width:980px;margin:0 auto;padding:26px 18px 60px;}
+  header{border-bottom:3px solid var(--amber);padding-bottom:14px;margin-bottom:20px;}
+  h1{font-family:'Anton',sans-serif;font-size:36px;letter-spacing:1px;margin:0;text-transform:uppercase;line-height:0.95;}
+  header .sub{font-size:12px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:4px;}
+
+  .tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;}
+  .tab-btn{
+    background:var(--pitch-dark);border:1px solid var(--line);color:var(--chalk);
+    padding:9px 16px;border-radius:20px;font-size:13px;cursor:pointer;font-weight:600;
+  }
+  .tab-btn.active{background:var(--amber);color:var(--pitch-dark);border-color:var(--amber);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  h2{font-family:'Anton',sans-serif;font-size:19px;text-transform:uppercase;letter-spacing:0.5px;
+    color:var(--amber);margin:0 0 12px;border-left:4px solid var(--amber);padding-left:10px;}
+  h3{font-size:13px;font-weight:700;color:var(--muted);margin:0 0 8px;text-transform:uppercase;letter-spacing:0.5px;}
+
+  .card{background:var(--pitch-dark);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px;}
+
+  select,input[type=number],input[type=text]{
+    background:var(--ink);border:1px solid var(--line);color:var(--chalk);
+    padding:8px 10px;border-radius:6px;font-size:14px;font-family:'Inter',sans-serif;
+  }
+  select:focus,input:focus{outline:2px solid var(--amber);}
+
+  .group-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .group-chip{background:transparent;border:1px solid var(--line);color:var(--muted);
+    padding:6px 12px;border-radius:16px;font-size:12px;cursor:pointer;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
+  .group-chip.active{background:var(--line);color:var(--chalk);}
+
+  .serie-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+  .chip{background:var(--pitch-dark);border:1px solid var(--line);color:var(--chalk);
+    padding:7px 14px;border-radius:20px;font-size:13px;cursor:pointer;font-weight:600;}
+  .chip.active,.chip:hover{background:var(--amber);color:var(--pitch-dark);border-color:var(--amber);}
+  .chip.global{border-style:dashed;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;background:var(--pitch-dark);border-radius:8px;overflow:hidden;}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;
+    padding:8px 6px;border-bottom:1px solid var(--line);letter-spacing:0.5px;}
+  td{padding:7px 6px;border-bottom:1px solid rgba(255,255,255,0.05);}
+  td.num{text-align:center;font-family:'Space Mono',monospace;}
+  td.pts{font-family:'Space Mono',monospace;font-weight:700;color:var(--amber);text-align:center;}
+  tr.rank1 td.pts{color:#8FE0A8;}
+  .rank-badge{display:inline-block;width:20px;text-align:center;color:var(--muted);}
+
+  .match-row{display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;}
+  .match-row .jr{width:30px;flex-shrink:0;color:var(--muted);font-family:'Space Mono',monospace;font-size:11px;text-align:center;}
+  .match-row .home{flex:1;text-align:right;}
+  .match-row .away{flex:1;}
+  .match-row .score-in{width:44px;text-align:center;}
+  .vs-sep{color:var(--muted);font-size:11px;}
+  .played{background:rgba(232,179,61,0.05);}
+
+  .empty{color:var(--muted);font-size:13px;padding:10px 0;}
+  .points-row{display:flex;gap:16px;flex-wrap:wrap;}
+  .points-row .field{width:100px;}
+  label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:4px;}
+  .club-list{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;}
+  @media(max-width:600px){.club-list{grid-template-columns:1fr;}}
+  .club-list input[type=text]{width:100%;}
+  .serie-points-group{margin-bottom:14px;}
+  .serie-points-group .group-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;font-weight:600;}
+  .serie-points-row{display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+  .serie-points-row .sname{flex:1;font-size:13px;}
+  .serie-points-row input[type=number]{width:56px;text-align:center;}
+  .jornada-header{font-size:12px;color:var(--amber);text-transform:uppercase;letter-spacing:0.5px;font-weight:700;
+    margin:14px 0 4px;padding-top:8px;border-top:1px solid var(--line);}
+  .jornada-header:first-child{margin-top:0;border-top:none;padding-top:0;}
+  .admin-bar{display:flex;align-items:center;gap:8px;margin-top:10px;}
+  .admin-bar input[type=password]{width:140px;}
+  .admin-status{font-size:11px;color:var(--muted);}
+  .admin-status.on{color:#8FE0A8;}
+  .locked-note{font-size:12px;color:var(--muted);margin-bottom:10px;font-style:italic;}
+  input:disabled,select:disabled{opacity:0.55;cursor:not-allowed;}
+  .crest-badge{width:20px;height:20px;border-radius:50%;object-fit:cover;flex-shrink:0;vertical-align:middle;margin-right:6px;}
+  .crest-fallback{width:20px;height:20px;border-radius:50%;background:var(--line);color:var(--chalk);
+    font-size:9px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;
+    flex-shrink:0;vertical-align:middle;margin-right:6px;}
+  .club-with-crest{display:flex;align-items:center;}
+  .club-edit-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+  .club-edit-row .club-name-in{flex:1;}
+  .club-edit-row .club-logo-select{flex:1;max-width:180px;}
+  .club-edit-row .club-logo-in{flex:1;font-size:12px;}
+  .club-list{display:block;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1 id="champTitle">Campeonato Cerrillos</h1>
+    <div class="sub">12 clubes · 11 series · tabla por serie y tabla conjunta por grupo</div>
+    <div class="admin-bar" id="adminBarLocked">
+      <input type="password" id="adminPassInput" placeholder="Contraseña admin">
+      <button class="ghost small" id="adminUnlockBtn" style="padding:7px 12px;font-size:12px;">Entrar como admin</button>
+      <span class="admin-status" id="adminStatus">Modo solo lectura</span>
+    </div>
+    <div class="admin-bar" id="adminBarUnlocked" style="display:none;">
+      <span class="admin-status on">Modo administrador activo</span>
+      <button class="ghost small" id="adminLockBtn" style="padding:7px 12px;font-size:12px;">Salir</button>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <div class="tab-btn active" data-tab="tablas">Tablas</div>
+    <div class="tab-btn" data-tab="resultados">Resultados</div>
+    <div class="tab-btn" data-tab="clubes">Clubes / config</div>
+  </div>
+
+  <div class="panel active" id="panel-tablas">
+    <div class="group-chips" id="groupChipsTablas"></div>
+    <div class="serie-chips" id="serieChipsTablas"></div>
+    <div id="tableHost"></div>
+  </div>
+
+  <div class="panel" id="panel-resultados">
+    <div class="group-chips" id="groupChipsRes"></div>
+    <div class="serie-chips" id="serieChipsRes"></div>
+    <div class="card">
+      <h3 id="resultadosTitle">Serie</h3>
+      <div id="matchListHost"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-clubes">
+    <div class="card">
+      <h3>Nombre del campeonato</h3>
+      <input type="text" id="champNameInput" style="width:100%;max-width:400px">
+    </div>
+    <div class="card">
+      <h3>Sistema de puntos por serie</h3>
+      <div id="pointsBySerieHost"></div>
+    </div>
+    <div class="card">
+      <h3>Clubes (participan en las 11 series)</h3>
+      <div class="club-list" id="clubListHost"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const CONFIG_KEY = 'clausura-config';
+const MATCHES_KEY = 'clausura-matches';
+
+const GROUPS_DEF = [
+  { name: 'Serie Infantiles', series: ['1ra Infantil','2da Infantil','3ra Infantil','4ta Infantil'] },
+  { name: 'Serie Adulta', series: ['1ra Adulta','2da Adulta','3ra Adulta','Femenina'] },
+  { name: 'Serie Senior', series: ['Senior','Super Senior','Dorados'] },
+];
+
+const DEFAULT_CLUBS = [
+  { name: 'Club Social y deportivo Libertad Santiago', logoUrl: 'logos/libertad-santiago.png' },
+  { name: 'Libertad Cerrillos', logoUrl: 'logos/libertad-cerrillos.png' },
+  { name: 'Club deportivo General San Martin', logoUrl: 'logos/general-san-martin.png' },
+  { name: 'Club deportivo Presidentes de Chile', logoUrl: 'logos/presidentes-de-chile.png' },
+  { name: 'Club deportivo hernando de Magallanes', logoUrl: 'logos/hernando-de-magallanes.png' },
+  { name: 'Raul Massone', logoUrl: 'logos/raul-massone.png' },
+  { name: 'Cacique Colo Colo', logoUrl: 'logos/cacique-colo-colo.png' },
+  { name: 'Cooperativa Desco', logoUrl: 'logos/cooperativa-desco.png' },
+  { name: 'Club Cooperativa Cerillos', logoUrl: 'logos/cooperativa-cerrillos.png' },
+  { name: 'Deportivo La Union', logoUrl: 'logos/deportivo-la-union.png' },
+  { name: 'Club deportivo la arika', logoUrl: 'logos/deportivo-la-arika.png' },
+  { name: 'Real Cerrillos', logoUrl: 'logos/real-cerrillos.png' },
+];
+
+const AVAILABLE_LOGOS = [
+  'logos/libertad-santiago.png',
+  'logos/libertad-cerrillos.png',
+  'logos/general-san-martin.png',
+  'logos/presidentes-de-chile.png',
+  'logos/hernando-de-magallanes.png',
+  'logos/raul-massone.png',
+  'logos/cacique-colo-colo.png',
+  'logos/cooperativa-desco.png',
+  'logos/cooperativa-cerrillos.png',
+  'logos/deportivo-la-union.png',
+  'logos/deportivo-la-arika.png',
+  'logos/real-cerrillos.png',
+];
+
+const ADMIN_PASSWORD = 'clausura2026';
+let isAdmin = false;
+
+// Adaptador de almacenamiento: usa window.storage si está disponible (vista previa de Claude),
+// y cae automáticamente a localStorage del navegador cuando se publica fuera de Claude (ej. Vercel).
+// OJO: con localStorage los datos quedan guardados por navegador/dispositivo, no compartidos
+// automáticamente entre todos los visitantes del sitio público.
+const storage = (typeof window.storage !== 'undefined' && window.storage) ? window.storage : {
+  async get(key){
+    try{
+      const raw = localStorage.getItem(key);
+      if(raw === null) return null;
+      return { key, value: raw, shared:false };
+    }catch(e){ return null; }
+  },
+  async set(key, value){
+    try{
+      localStorage.setItem(key, value);
+      return { key, value, shared:false };
+    }catch(e){ return null; }
+  }
+};
+
+function uid(){ return Math.random().toString(36).slice(2,10); }
+
+function defaultPointsBySerie(){
+  const map = {};
+  GROUPS_DEF.forEach(g => g.series.forEach(s => { map[s] = { win: 3, draw: 1, loss: 0 }; }));
+  return map;
+}
+
+let config = {
+  champName: 'Campeonato Cerrillos',
+  pointsBySerie: defaultPointsBySerie(),
+  clubs: DEFAULT_CLUBS.map(c => ({ id: uid(), name: c.name, logoUrl: c.logoUrl })),
+};
+let matches = [];
+let activeGroupTablas = GROUPS_DEF[0].name;
+let activeSerieTablas = GROUPS_DEF[0].series[0];
+let activeGroupRes = GROUPS_DEF[0].name;
+let activeSerieRes = GROUPS_DEF[0].series[0];
+
+function roundRobinFixtures(clubIds){
+  const teams = clubIds.slice();
+  if(teams.length % 2 === 1) teams.push(null);
+  const n = teams.length;
+  const half = n/2;
+  const fixed = teams[0];
+  let rotating = teams.slice(1);
+  const rounds = [];
+  for(let r=0;r<n-1;r++){
+    const current = [fixed].concat(rotating);
+    const pairs = [];
+    for(let i=0;i<half;i++){
+      const t1 = current[i], t2 = current[n-1-i];
+      if(t1 !== null && t2 !== null) pairs.push([t1,t2]);
+    }
+    rounds.push(pairs);
+    rotating = [rotating[rotating.length-1]].concat(rotating.slice(0,-1));
+  }
+  return rounds;
+}
+
+function generateAllMatches(){
+  const clubIds = config.clubs.map(c => c.id);
+  const list = [];
+  GROUPS_DEF.forEach(g => {
+    g.series.forEach(serieName => {
+      const rounds = roundRobinFixtures(clubIds);
+      rounds.forEach((pairs, idx) => {
+        pairs.forEach(([home,away]) => {
+          list.push({ id: uid(), group: g.name, serie: serieName, jornada: idx+1,
+            homeId: home, awayId: away, homeScore: null, awayScore: null });
+        });
+      });
+    });
+  });
+  return list;
+}
+
+async function loadData(){
+  try{
+    const c = await storage.get(CONFIG_KEY, true);
+    if(c && c.value){ config = JSON.parse(c.value); }
+  }catch(e){}
+  if(!config.pointsBySerie) config.pointsBySerie = defaultPointsBySerie();
+  GROUPS_DEF.forEach(g => g.series.forEach(s => {
+    if(!config.pointsBySerie[s]) config.pointsBySerie[s] = { win:3, draw:1, loss:0 };
+  }));
+  config.clubs.forEach(c => { if(c.logoUrl === undefined) c.logoUrl = ''; });
+  try{
+    const m = await storage.get(MATCHES_KEY, true);
+    if(m && m.value){ matches = JSON.parse(m.value); }
+  }catch(e){}
+
+  if(!matches || !matches.length){
+    matches = generateAllMatches();
+    await saveMatches();
+    await saveConfig();
+  }
+  renderAll();
+}
+
+async function saveConfig(){
+  try{ await storage.set(CONFIG_KEY, JSON.stringify(config), true); }
+  catch(e){ console.error('Error guardando configuración', e); }
+}
+async function saveMatches(){
+  try{ await storage.set(MATCHES_KEY, JSON.stringify(matches), true); }
+  catch(e){ console.error('Error guardando partidos', e); }
+}
+
+function clubName(id){
+  const c = config.clubs.find(c => c.id === id);
+  return c ? c.name : '—';
+}
+function clubLogo(id){
+  const c = config.clubs.find(c => c.id === id);
+  return c ? c.logoUrl : '';
+}
+function initials(name){
+  return name.split(/\s+/).filter(Boolean).slice(0,2).map(w => w[0].toUpperCase()).join('');
+}
+function crestHtml(id){
+  const logo = clubLogo(id);
+  const name = clubName(id);
+  if(logo){
+    return `<img class="crest-badge" src="${logo}" onerror="this.outerHTML='<span class=&quot;crest-fallback&quot;>${initials(name)}</span>'">`;
+  }
+  return `<span class="crest-fallback">${initials(name)}</span>`;
+}
+
+function renderAll(){
+  document.getElementById('champTitle').textContent = config.champName || 'Campeonato Cerrillos';
+  document.getElementById('champNameInput').value = config.champName || '';
+  document.getElementById('champNameInput').disabled = !isAdmin;
+  renderPointsBySerie();
+  renderClubList();
+  renderGroupChips('groupChipsTablas', activeGroupTablas, g => { activeGroupTablas = g; activeSerieTablas = null; renderAll(); });
+  renderGroupChips('groupChipsRes', activeGroupRes, g => { activeGroupRes = g; activeSerieRes = null; renderAll(); });
+  renderSerieChipsTablas();
+  renderSerieChipsRes();
+  renderTable();
+  renderMatchList();
+}
+
+function renderGroupChips(hostId, active, onClick){
+  const host = document.getElementById(hostId);
+  host.innerHTML = GROUPS_DEF.map(g => `<div class="group-chip ${g.name===active?'active':''}" data-g="${g.name}">${g.name}</div>`).join('');
+  host.querySelectorAll('.group-chip').forEach(chip => {
+    chip.addEventListener('click', () => onClick(chip.dataset.g));
+  });
+}
+
+function renderSerieChipsTablas(){
+  const group = GROUPS_DEF.find(g => g.name === activeGroupTablas);
+  if(!activeSerieTablas) activeSerieTablas = 'CONJUNTA';
+  const host = document.getElementById('serieChipsTablas');
+  let html = group.series.map(s => `<div class="chip ${activeSerieTablas===s?'active':''}" data-s="${s}">${s}</div>`).join('');
+  html += `<div class="chip global ${activeSerieTablas==='CONJUNTA'?'active':''}" data-s="CONJUNTA">Tabla conjunta ${group.name}</div>`;
+  host.innerHTML = html;
+  host.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => { activeSerieTablas = chip.dataset.s; renderSerieChipsTablas(); renderTable(); });
+  });
+}
+
+function renderSerieChipsRes(){
+  const group = GROUPS_DEF.find(g => g.name === activeGroupRes);
+  if(!activeSerieRes || activeSerieRes==='CONJUNTA') activeSerieRes = group.series[0];
+  const host = document.getElementById('serieChipsRes');
+  host.innerHTML = group.series.map(s => `<div class="chip ${activeSerieRes===s?'active':''}" data-s="${s}">${s}</div>`).join('');
+  host.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => { activeSerieRes = chip.dataset.s; renderSerieChipsRes(); renderMatchList(); });
+  });
+}
+
+function pointsForSerie(serieName){
+  return config.pointsBySerie[serieName] || { win:3, draw:1, loss:0 };
+}
+
+function computeStandings(clubIds, matchList){
+  const stats = {};
+  clubIds.forEach(id => { stats[id] = { id, name: clubName(id), pj:0,g:0,e:0,p:0,gf:0,gc:0,pts:0 }; });
+  matchList.forEach(m => {
+    if(m.homeScore === null || m.awayScore === null) return;
+    const h = stats[m.homeId], a = stats[m.awayId];
+    if(!h || !a) return;
+    const pts = pointsForSerie(m.serie);
+    h.pj++; a.pj++;
+    h.gf += m.homeScore; h.gc += m.awayScore;
+    a.gf += m.awayScore; a.gc += m.homeScore;
+    if(m.homeScore > m.awayScore){ h.g++; a.p++; h.pts += pts.win; a.pts += pts.loss; }
+    else if(m.homeScore < m.awayScore){ a.g++; h.p++; a.pts += pts.win; h.pts += pts.loss; }
+    else { h.e++; a.e++; h.pts += pts.draw; a.pts += pts.draw; }
+  });
+  const rows = Object.values(stats).map(s => ({ ...s, dg: s.gf - s.gc }));
+  rows.sort((x,y) => y.pts - x.pts || y.dg - x.dg || y.gf - x.gf || x.name.localeCompare(y.name));
+  return rows;
+}
+
+function renderStandingsTable(rows){
+  if(!rows.length) return '<div class="empty">Sin clubes.</div>';
+  let html = '<table><thead><tr><th>#</th><th>Club</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th><th>Pts</th></tr></thead><tbody>';
+  rows.forEach((r,i) => {
+    html += `<tr class="${i===0?'rank1':''}">
+      <td class="num"><span class="rank-badge">${i+1}</span></td>
+      <td><span class="club-with-crest">${crestHtml(r.id)}${r.name}</span></td>
+      <td class="num">${r.pj}</td><td class="num">${r.g}</td><td class="num">${r.e}</td><td class="num">${r.p}</td>
+      <td class="num">${r.gf}</td><td class="num">${r.gc}</td><td class="num">${r.dg}</td>
+      <td class="pts">${r.pts}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+function renderTable(){
+  const host = document.getElementById('tableHost');
+  const clubIds = config.clubs.map(c => c.id);
+  if(activeSerieTablas === 'CONJUNTA'){
+    const group = GROUPS_DEF.find(g => g.name === activeGroupTablas);
+    const groupMatches = matches.filter(m => m.group === group.name);
+    const rows = computeStandings(clubIds, groupMatches);
+    host.innerHTML = '<h2>Tabla conjunta — ' + group.name + '</h2>' + renderStandingsTable(rows);
+  }else{
+    const serieMatches = matches.filter(m => m.serie === activeSerieTablas);
+    const rows = computeStandings(clubIds, serieMatches);
+    host.innerHTML = '<h2>' + activeSerieTablas + '</h2>' + renderStandingsTable(rows);
+  }
+}
+
+function renderMatchList(){
+  document.getElementById('resultadosTitle').textContent = activeSerieRes;
+  const host = document.getElementById('matchListHost');
+  const list = matches.filter(m => m.serie === activeSerieRes).sort((a,b) => a.jornada - b.jornada);
+  if(!list.length){ host.innerHTML = '<div class="empty">Sin partidos.</div>'; return; }
+  const dis = isAdmin ? '' : 'disabled';
+
+  let html = isAdmin ? '' : '<div class="locked-note">Ingresa como administrador para cargar resultados.</div>';
+  let lastJornada = null;
+  list.forEach(m => {
+    if(m.jornada !== lastJornada){
+      html += `<div class="jornada-header">Jornada ${m.jornada}</div>`;
+      lastJornada = m.jornada;
+    }
+    html += `
+    <div class="match-row ${m.homeScore!==null && m.awayScore!==null ? 'played':''}" data-match-id="${m.id}">
+      <span class="jr">J${m.jornada}</span>
+      <span class="home"><span class="club-with-crest" style="justify-content:flex-end;">${crestHtml(m.homeId)}${clubName(m.homeId)}</span></span>
+      <input type="number" class="score-in home-score" min="0" value="${m.homeScore===null?'':m.homeScore}" ${dis}>
+      <span class="vs-sep">–</span>
+      <input type="number" class="score-in away-score" min="0" value="${m.awayScore===null?'':m.awayScore}" ${dis}>
+      <span class="away"><span class="club-with-crest">${crestHtml(m.awayId)}${clubName(m.awayId)}</span></span>
+    </div>`;
+  });
+  host.innerHTML = html;
+  if(!isAdmin) return;
+  host.querySelectorAll('.match-row').forEach(row => {
+    const mid = row.dataset.matchId;
+    const match = matches.find(m => m.id === mid);
+    row.querySelector('.home-score').addEventListener('change', e => {
+      const v = e.target.value === '' ? null : Math.max(0, parseInt(e.target.value)||0);
+      match.homeScore = v; saveMatches(); renderMatchList(); renderTable();
+    });
+    row.querySelector('.away-score').addEventListener('change', e => {
+      const v = e.target.value === '' ? null : Math.max(0, parseInt(e.target.value)||0);
+      match.awayScore = v; saveMatches(); renderMatchList(); renderTable();
+    });
+  });
+}
+
+function renderClubList(){
+  const host = document.getElementById('clubListHost');
+  const dis = isAdmin ? '' : 'disabled';
+  const logoOptions = ['<option value="">— Sin logo —</option>']
+    .concat(AVAILABLE_LOGOS.map(l => `<option value="${l}">${l.replace('logos/','')}</option>`))
+    .join('');
+  host.innerHTML = config.clubs.map(c => `
+    <div class="club-edit-row" data-club-id="${c.id}">
+      ${crestHtml(c.id)}
+      <input type="text" class="club-name-in" value="${c.name.replace(/"/g,'&quot;')}" ${dis}>
+      <select class="club-logo-select" ${dis}>${logoOptions}</select>
+      <input type="text" class="club-logo-in" placeholder="o ruta/URL personalizada" value="${(c.logoUrl||'').replace(/"/g,'&quot;')}" ${dis}>
+    </div>
+  `).join('');
+  if(!isAdmin) return;
+  host.querySelectorAll('.club-edit-row').forEach(row => {
+    const club = config.clubs.find(c => c.id === row.dataset.clubId);
+    const select = row.querySelector('.club-logo-select');
+    const textIn = row.querySelector('.club-logo-in');
+    select.value = AVAILABLE_LOGOS.includes(club.logoUrl) ? club.logoUrl : '';
+    row.querySelector('.club-name-in').addEventListener('change', e => {
+      if(club){ club.name = e.target.value.trim() || club.name; saveConfig(); renderAll(); }
+    });
+    select.addEventListener('change', e => {
+      if(!e.target.value) return;
+      textIn.value = e.target.value;
+      if(club){ club.logoUrl = e.target.value; saveConfig(); renderAll(); }
+    });
+    textIn.addEventListener('change', e => {
+      if(club){ club.logoUrl = e.target.value.trim(); saveConfig(); renderAll(); }
+    });
+  });
+}
+
+function renderPointsBySerie(){
+  const host = document.getElementById('pointsBySerieHost');
+  const dis = isAdmin ? '' : 'disabled';
+  host.innerHTML = (isAdmin ? '' : '<div class="locked-note">Ingresa como administrador para modificar los puntajes.</div>') + GROUPS_DEF.map(g => `
+    <div class="serie-points-group">
+      <div class="group-label">${g.name}</div>
+      ${g.series.map(s => {
+        const p = config.pointsBySerie[s] || { win:3, draw:1, loss:0 };
+        return `<div class="serie-points-row" data-serie="${s}">
+          <span class="sname">${s}</span>
+          <label style="margin:0;width:auto;">V <input type="number" class="pts-win" min="0" value="${p.win}" ${dis}></label>
+          <label style="margin:0;width:auto;">E <input type="number" class="pts-draw" min="0" value="${p.draw}" ${dis}></label>
+          <label style="margin:0;width:auto;">D <input type="number" class="pts-loss" min="0" value="${p.loss}" ${dis}></label>
+        </div>`;
+      }).join('')}
+    </div>
+  `).join('');
+  if(!isAdmin) return;
+  host.querySelectorAll('.serie-points-row').forEach(row => {
+    const serie = row.dataset.serie;
+    const update = () => {
+      config.pointsBySerie[serie] = {
+        win: parseInt(row.querySelector('.pts-win').value) || 0,
+        draw: parseInt(row.querySelector('.pts-draw').value) || 0,
+        loss: parseInt(row.querySelector('.pts-loss').value) || 0,
+      };
+      saveConfig(); renderTable();
+    };
+    row.querySelector('.pts-win').addEventListener('change', update);
+    row.querySelector('.pts-draw').addEventListener('change', update);
+    row.querySelector('.pts-loss').addEventListener('change', update);
+  });
+}
+
+document.getElementById('adminUnlockBtn').addEventListener('click', () => {
+  const val = document.getElementById('adminPassInput').value;
+  if(val === ADMIN_PASSWORD){
+    isAdmin = true;
+    document.getElementById('adminBarLocked').style.display = 'none';
+    document.getElementById('adminBarUnlocked').style.display = 'flex';
+    document.getElementById('adminPassInput').value = '';
+    renderAll();
+  }else{
+    document.getElementById('adminStatus').textContent = 'Contraseña incorrecta';
+    document.getElementById('adminStatus').style.color = '#f5b0ab';
+  }
+});
+document.getElementById('adminLockBtn').addEventListener('click', () => {
+  isAdmin = false;
+  document.getElementById('adminBarLocked').style.display = 'flex';
+  document.getElementById('adminBarUnlocked').style.display = 'none';
+  document.getElementById('adminStatus').textContent = 'Modo solo lectura';
+  document.getElementById('adminStatus').style.color = '';
+  renderAll();
+});
+
+document.getElementById('champNameInput').addEventListener('change', e => {
+  if(!isAdmin) return;
+  config.champName = e.target.value.trim() || 'Campeonato Cerrillos';
+  saveConfig(); document.getElementById('champTitle').textContent = config.champName;
+});
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+loadData();
+</script>
+</body>
+</html>
